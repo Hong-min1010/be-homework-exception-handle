@@ -2,14 +2,17 @@ package com.springboot.advice;
 
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.response.ErrorResponse;
+import org.apache.tomcat.jni.Error;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.validation.ConstraintViolationException;
+import java.util.Set;
 
 @RestControllerAdvice
 public class GlobalExceptionAdvice {
@@ -32,16 +35,25 @@ public class GlobalExceptionAdvice {
     }
 
     @ExceptionHandler
-    public ResponseEntity handleBusinessLogicException(BusinessLogicException e) {
-        System.out.println(e.getExceptionCode().getStatus());
-        System.out.println(e.getMessage());
-
+    public ResponseEntity handleBusinessLogicException(BusinessLogicException businessLogicException) {
+//        System.out.println(e.getExceptionCode().getStatus());
+//        System.out.println(e.getMessage());
         // TODO GlobalExceptionAdvice 기능 추가 1
-        return new ResponseEntity<>(HttpStatus.valueOf(e.getExceptionCode()
-                .getStatus()));
+       final ErrorResponse errorResponse = ErrorResponse.of(businessLogicException);
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     // TODO GlobalExceptionAdvice 기능 추가 2
+    @ExceptionHandler
+    public ResponseEntity handlePatchException(HttpRequestMethodNotSupportedException e) {
+        final ErrorResponse errorResponse = ErrorResponse.of(e);
+        return new ResponseEntity(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
+    }
 
     // TODO GlobalExceptionAdvice 기능 추가 3
+    @ExceptionHandler
+    public ResponseEntity handleException(NullPointerException nullPointerException) {
+final ErrorResponse errorResponse = ErrorResponse.of(nullPointerException);
+        return new ResponseEntity(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
